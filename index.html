@@ -1,0 +1,377 @@
+<!doctype html>
+<html>
+
+	<head>
+
+	  <meta charset="utf-8">
+	  <meta name="viewport" content="initial-scale=1.0">
+	  <title>SkateCat in Space</title>
+	  <link rel="stylesheet" href="css/standardize.css">
+	  <link rel="stylesheet" href="css/index.css">
+
+	</head>
+
+	<body>
+
+		<canvas id="myCanvas" width="800" height="400">
+			
+		</canvas>
+
+		<p id=score>
+			score: 0
+		</p>
+
+		<script src="js/jquery-min.js"></script>
+
+		<script type="text/javascript">
+
+			var isRun = true;
+			var isDead = false;
+			var catBlinks = false;
+			var catVisible = true;
+			var blinkCounter = 0;
+
+			var bgSpeed = 2;
+			var bgItemSpeed = 2;
+			var itemSpeed = 3;
+			var catSpeed = 6;
+
+			var level = 0;
+
+			var score = 0;
+
+			var c = document.getElementById("myCanvas");
+    		var ctx = c.getContext("2d");
+    		ctx.imageSmoothingEnabled = false;
+
+    		//draw and animate background
+			var imgSpace = new Image();
+			imgSpace.src = "res/space.png";
+
+			var bg1XPos = 0;
+			var bg2XPos = 800;
+			var bg3XPos = 1600;
+
+			function movePanel(bgXPos){
+				if(bgXPos == (-800)){
+					bgXPos = 1600 ;	
+				}
+				ctx.drawImage(imgSpace, bgXPos, 0, 800, 400);
+				
+				if(!isDead){
+					bgXPos -= bgSpeed;
+				}
+				
+				return bgXPos;
+			}
+
+			function moveBg(){
+				bg1XPos = movePanel(bg1XPos);
+				bg2XPos = movePanel(bg2XPos);
+				bg3XPos = movePanel(bg3XPos);
+			}
+
+			//draw and animate cat
+			function catObject(xPos, yPos){
+				this.xPos = xPos;
+				this.yPos = yPos;
+				this.up = false;
+				this.down = false;
+				this.left = false;
+				this.right = false;
+				this.xSize = 80;
+				this.ySize = 80;
+			}
+
+			var cat = new catObject(100, 200);
+
+			var imgCat = new Image();
+			imgCat.src = "res/cat.png";
+
+			function moveCat(){
+
+				if(!isDead){
+					if(cat.up == true && cat.yPos > 0){
+						cat.yPos -= catSpeed;
+					}
+					if(cat.down == true && cat.yPos < 400-80){
+						cat.yPos += catSpeed;
+					}
+					if(cat.left == true && cat.xPos > 0){
+						cat.xPos -= catSpeed;
+					}
+					if(cat.right == true && cat.xPos < 800-100){
+						cat.xPos += catSpeed;
+					}	
+				}
+				
+
+				if(catBlinks){
+					if(blinkCounter<20){
+						catVisible = !catVisible;
+					}
+
+					else{
+						blinkCounter = 0;
+						catVisible = true;
+						catBlinks = false;
+						isRun = false;
+						bgItemArray = [];
+						ItemArray = [];
+					}
+
+					blinkCounter++;
+				}
+
+				if(catVisible){
+					ctx.drawImage(imgCat, cat.xPos, cat.yPos, 100, 100);	
+				}
+				
+			}
+
+			window.onkeydown = function(e) {
+   				var key = e.keyCode ? e.keyCode : e.which;
+
+    			switch(key){
+    				case 38:
+    					cat.up = true;
+    					break;
+    				case 39:
+    					cat.right = true;
+    					break;
+    				case 40:
+    					cat.down = true;
+    					break;
+    				case 37:
+    					cat.left = true;
+    					break;
+    				case 32:
+    					if(!isRun){
+    						cat = new catObject(100, 200);
+    						isRun = true;
+    						isDead = false;
+    						score = 0;
+
+    						bgSpeed = 2;
+							bgItemSpeed = 2;
+							itemSpeed = 3;
+							catSpeed = 6;
+
+    						document.getElementById('score').innerHTML = 'score: ' + score;
+    					}
+    					
+    				default:
+    					break;
+    					
+    			}
+			}
+
+			window.onkeyup = function(e) {
+   				var key = e.keyCode ? e.keyCode : e.which;
+
+    			switch(key){
+    				case 38:
+    					cat.up = false;
+    					break;
+    				case 39:
+    					cat.right = false;
+    					break;
+    				case 40:
+    					cat.down = false;
+    					break;
+    				case 37:
+    					cat.left = false;
+    					break;
+    				default:
+    					break;
+    					
+    			}
+			}
+
+			//draw and animate background items
+			var imgBgItem1 = new Image();
+			imgBgItem1.src = "res/rock2.png";
+
+			var imgBgItem2 = new Image();
+			imgBgItem2.src = "res/rock1.png";
+
+			var bgItemImgArray = [imgBgItem1, imgBgItem2];
+
+			function bgItem(yPos, kind){
+				this.xPos = 900;
+				this.yPos = yPos;
+				this.kind = kind;
+				this.xSize = 100;
+				this.ySize = 70;
+			}
+
+			var bgItemArray = [];
+
+			function createBgItems(){
+				var rnd = Math.floor(Math.random() * 200)+1;
+
+				if(rnd < 3){
+					var item = new bgItem(Math.floor(Math.random() * 350), rnd);
+					
+					if(rnd == 2){
+						item.xSize = 40;
+						item.ySize = 40;
+					}
+
+					console.log(item.xSize);
+
+					bgItemArray.push(item);
+				}
+			}
+
+			function catHitsBgItem(obstacle){
+
+
+				if((obstacle.yPos*.9+obstacle.ySize) > cat.yPos 
+					&& obstacle.yPos < (cat.yPos+cat.ySize) 
+					&& obstacle.xPos+obstacle.xSize*.9>cat.xPos 
+					&& obstacle.xPos<(cat.xPos+cat.xSize)
+					){
+					//console.log("test");
+					return true;
+				}
+
+				return false;
+			}
+
+			function moveBgItems(){
+
+				
+				var removeIndex = -1;
+				for(i=0; i<bgItemArray.length; i++){
+					var item = bgItemArray[i];
+
+					if(!isDead){
+						item.xPos -= bgItemSpeed + item.kind;	
+					}
+					
+					if(catHitsBgItem(item)){
+						catBlinks = true;
+						isDead = true;
+					}
+					if(item.xPos < -100){
+						removeIndex = i;
+					}
+					ctx.drawImage(bgItemImgArray[item.kind-1], item.xPos, item.yPos, item.xSize, item.ySize);
+				}
+				if(removeIndex > -1){
+					bgItemArray.splice(removeIndex, 1);
+				}
+				createBgItems();	
+								
+			}
+
+			//draw and animate items
+			var imgItem1 = new Image();
+			imgItem1.src = "res/cupcake.png";
+
+			//var imgItem2 = new Image();
+			//imgBgItem2.src = "res/rock1.png";
+
+			var ItemImgArray = [imgItem1];
+
+			function Item(yPos, kind){
+				this.xPos = 900;
+				this.yPos = yPos;
+				this.kind = kind;
+				this.xSize = 40;
+				this.ySize = 40;
+			}
+
+			var ItemArray = [];
+
+			function createItems(){
+				var rnd = Math.floor(Math.random() * 100)+1;
+
+				if(rnd == 1){
+					var item = new Item(Math.floor(Math.random() * 350), rnd);
+					
+					//if(rnd == 2){
+					//	item.xSize = 40;
+					//	item.ySize = 40;
+					//}
+
+					ItemArray.push(item);
+				}
+			}
+
+			function catEatsItem(obstacle){
+
+				if((obstacle.yPos+obstacle.ySize) > cat.yPos 
+					&& obstacle.yPos < (cat.yPos+cat.ySize) 
+					&& obstacle.xPos>cat.xPos 
+					&& obstacle.xPos<(cat.xPos+cat.xSize)
+					){
+					//console.log("test");
+					return true;
+				}
+
+				return false;
+			}
+
+
+			function moveItems(){
+				if(!isDead){
+					var removeIndex = -1;
+
+					for(i=0; i<ItemArray.length; i++){
+						var item = ItemArray[i];
+	
+						item.xPos -= itemSpeed * item.kind;
+	
+						if(catEatsItem(item)){
+							removeIndex = i;
+							score++;
+							document.getElementById('score').innerHTML = 'score: ' + score;
+						}
+	
+						else if(item.xPos < -100){
+							removeIndex = i;
+						}
+	
+						ctx.drawImage(ItemImgArray[item.kind-1], item.xPos, item.yPos, item.xSize, item.ySize);
+					}
+	
+					if(removeIndex > -1){
+						ItemArray.splice(removeIndex, 1);
+					}
+	
+					createItems();	
+				}
+				
+			}
+
+
+			function run(){
+				if(isRun){
+					ctx.clearRect(0, 0, c.width, c.height);
+					moveBg();
+					moveCat();
+					moveBgItems();
+					moveItems();
+
+					level++;
+
+					if(level == 1000){
+						level = 0;
+						bgItemSpeed++;
+						itemSpeed++;
+						catSpeed++;
+
+					}
+				}
+			}
+
+			window.setInterval(run, 20);
+
+		</script>		
+	</body>
+
+</html>
+
+<!--test-->

@@ -1,0 +1,21 @@
+body {
+}
+
+#myCanvas {
+	position: absolute;
+	left: 50%;
+	margin-left: -400px;
+	top: 50%;
+	margin-top: -200px;
+}
+
+#score {
+	color: #ffffff;
+	font-family: courier;
+	font-size: 20px;
+	position: absolute;
+	left: 50%;
+	margin-left: -390px;
+	top: 50%;
+	margin-top: +180px;
+}
